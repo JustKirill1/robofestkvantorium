@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import time
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 color = []
 first = 0
 second = 0
@@ -14,32 +14,42 @@ while (1):
 
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
+    red1 = cv2.inRange(hsv, (0, 50, 20), (5, 255, 255))
     red2 = cv2.inRange(hsv, (170, 50, 130), (180, 255, 255))
-    blue = cv2.inRange(hsv, (95, 50, 50), (120, 255, 255))
-    green = cv2.inRange(hsv, (40, 40, 40), (70, 255, 255))
+    blue = cv2.inRange(hsv, (87, 156, 50), (120, 255, 255))
+    green = cv2.inRange(hsv, (40, 80, 40), (80, 255, 255))
+    red = cv2.bitwise_or(red1, red2)
 
     b_mean = np.mean(blue)
     g_mean = np.mean(green)
-    r_mean = np.mean(red2)
+    r_mean = np.mean(red)
 
-    if (b_mean > g_mean and b_mean > r_mean):
+    res = cv2.bitwise_and(frame, frame, mask=red)
+    res1 = cv2.bitwise_and(frame, frame, mask=blue)
+    res2 = cv2.bitwise_and(frame, frame, mask=green)
+
+    b_perc = (np.sum(res1) / np.size(res1)) / 255 * 100
+    g_perc = (np.sum(res2) / np.size(res2)) / 255 * 100
+    r_perc = (np.sum(res) / np.size(res)) / 255 * 100
+
+    # print("процент содержания синего %.2f " % b_perc)
+    # print("процент содержания зеленного %.2f " % g_perc)
+    # print("процент содержания красного %.2f " % r_perc)
+
+    if b_mean > g_mean and b_mean > r_mean and b_perc > 1.5:
         if 'b' not in color:
             color += 'b'
             print(color)
 
-    if (g_mean > r_mean and g_mean > b_mean):
+    if g_mean > r_mean and g_mean > b_mean and g_perc > 1.5:
         if 'g' not in color:
             color += 'g'
             print(color)
 
-    if (r_mean > g_mean and r_mean > b_mean):
+    if r_mean > g_mean and r_mean > b_mean and r_perc > 1.5:
         if 'r' not in color:
             color += 'r'
             print(color)
-
-    res = cv2.bitwise_and(frame, frame, mask=red2)
-    res1 = cv2.bitwise_and(frame, frame, mask=blue)
-    res2 = cv2.bitwise_and(frame, frame, mask=green)
 
     if len(color) == 3:
         if b_mean > g_mean and b_mean > r_mean and color.index('b') == 0 and first == 0:
